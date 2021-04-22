@@ -9,6 +9,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Retrieve Version Tag
+      id: version
+      run: |
+        git fetch --tags --force # See https://github.com/actions/checkout/issues/290
+        VERSION=$(make tag)
+        echo "VERSION=$VERSION"
+        SHORT_VERSION="$(echo "$VERSION" | cut -d - -f 1)"
+        echo "SHORT_VERSION=$SHORT_VERSION"
+        if git tag --points-at HEAD | grep -q "^${SHORT_VERSION}$"; then
+          RELEASE="true"
+          echo "Release mode"
+        else
+          RELEASE="false"
+          echo "No Release mode"
+        fi
+        echo "::set-output name=VERSION::$VERSION"
+        echo "::set-output name=SHORT_VERSION::$SHORT_VERSION"
+        echo "::set-output name=RELEASE::$RELEASE"
     - name: Cache pip
       uses: actions/cache@v2
       with:
@@ -29,8 +47,13 @@ jobs:
         pip install --upgrade platformio
     - name: Run PlatformIO
       run: pio run -e nano_33_iot
+    - name: Prepare Artifacts
+      run: |
+        rm -rf artifacts
+        mkdir artifacts
+        cp .pio/build/nano_33_iot/firmware.bin "artifacts/firmware-${{ steps.version.outputs.VERSION }}.bin"
     - name: Publish Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: firmware
-        path: .pio/build/nano_33_iot/firmware.bin
+        name: "arduinput-firmware-${{ steps.version.outputs.VERSION }}"
+        path: artifacts
