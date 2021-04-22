@@ -51,9 +51,9 @@ jobs:
       run: |
         rm -rf artifacts
         mkdir artifacts
-        cp .pio/build/nano_33_iot/firmware.bin "artifacts/firmware-${{ env.VERSION }}.bin"
+        cp .pio/build/nano_33_iot/firmware.bin artifacts/firmware-"${{ env.VERSION }}.bin"
     - name: Publish Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: "arduinput-firmware-${{ env.VERSION }}"
+        name: arduinput-firmware-"${{ env.VERSION }}"
         path: artifacts
