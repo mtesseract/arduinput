@@ -29,3 +29,8 @@ jobs:
         pip install --upgrade platformio
     - name: Run PlatformIO
       run: pio run -e nano_33_iot
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: firmware
+        path: .pio/build/nano_33_iot/firmware.bin
