@@ -24,9 +24,9 @@ jobs:
           RELEASE="false"
           echo "No Release mode"
         fi
-        echo "::set-output name=VERSION::$VERSION"
-        echo "::set-output name=SHORT_VERSION::$SHORT_VERSION"
-        echo "::set-output name=RELEASE::$RELEASE"
+        echo "::set-env name=VERSION::$VERSION"
+        echo "::set-env name=SHORT_VERSION::$SHORT_VERSION"
+        echo "::set-env name=RELEASE::$RELEASE"
     - name: Cache pip
       uses: actions/cache@v2
       with:
@@ -51,9 +51,9 @@ jobs:
       run: |
         rm -rf artifacts
         mkdir artifacts
-        cp .pio/build/nano_33_iot/firmware.bin "artifacts/firmware-${{ steps.version.outputs.VERSION }}.bin"
+        cp .pio/build/nano_33_iot/firmware.bin "artifacts/firmware-$VERSION.bin"
     - name: Publish Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: "arduinput-firmware-${{ steps.version.outputs.VERSION }}"
+        name: "arduinput-firmware-$VERSION"
         path: artifacts
