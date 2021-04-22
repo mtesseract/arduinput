@@ -1,0 +1,62 @@
+name: PlatformIO CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Retrieve Version Tag
+      id: version
+      run: |
+        git fetch origin --tags --force # See https://github.com/actions/checkout/issues/290
+        VERSION=$(make tag)
+        test -n "$VERSION"
+        echo "VERSION=$VERSION"
+        SHORT_VERSION="$(echo "$VERSION" | cut -d - -f 1)"
+        echo "SHORT_VERSION=$SHORT_VERSION"
+        if git tag --points-at HEAD | grep -q "^${SHORT_VERSION}$"; then
+          RELEASE="true"
+          echo "Release mode"
+        else
+          RELEASE="false"
+          echo "No Release mode"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "SHORT_VERSION=$SHORT_VERSION" >> $GITHUB_ENV
+        echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+    - name: Run PlatformIO
+      run: pio run -e nano_33_iot
+    - name: Prepare Artifacts
+      run: |
+        rm -rf artifacts
+        mkdir artifacts
+        cp .pio/build/nano_33_iot/firmware.bin "artifacts/firmware-${{ env.VERSION }}.bin"
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: "arduinput-firmware-${{ env.VERSION }}"
+        path: artifacts
