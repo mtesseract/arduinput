@@ -1,6 +1,6 @@
 .PHONY: tag
 
-VERSION=$(shell git describe --dirty)
+VERSION=$(shell git describe --tags --dirty)
 .EXPORT_ALL_VARIABLES:
 
 tag:
